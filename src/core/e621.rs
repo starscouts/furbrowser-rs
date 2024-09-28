@@ -4,19 +4,19 @@ use base64::Engine;
 use base64::prelude::BASE64_STANDARD;
 use rusqlite::Connection;
 use urlencoding::encode;
-use crate::models::config::{Blacklist, Secrets};
+use crate::models::config::{Blacklist, Config};
 use crate::models::error::FurbrowserResult;
 use crate::models::post::Posts;
-use crate::USER_AGENT;
+use crate::VERSION;
 use crate::util::sql;
 
-pub fn page(tags: &str, page: usize, secrets: &Secrets) -> FurbrowserResult<Posts> {
+pub fn page(tags: &str, page: usize, config: &Config) -> FurbrowserResult<Posts> {
     let tags = encode(tags);
-    let response = ureq::get(&format!("https://e621.net/posts.json?limit=320&tags={tags}&page={page}"))
+    let response = ureq::get(&format!("https://{}/posts.json?limit={}&tags={tags}&page={page}", config.domain, config.posts_per_page))
         .timeout(Duration::from_millis(5000))
-        .set("User-Agent", USER_AGENT)
+        .set("User-Agent", &config.user_agent.replace("VERSION", VERSION))
         .set("Authorization", &format!("Basic {}",
-            BASE64_STANDARD.encode(format!("{}:{}", secrets.user_name, secrets.api_key))))
+            BASE64_STANDARD.encode(format!("{}:{}", config.secrets.user_name, config.secrets.api_key))))
         .call()?;
 
     println!("Decoding data...");

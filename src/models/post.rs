@@ -5,10 +5,10 @@ use base64::Engine;
 use base64::prelude::BASE64_STANDARD;
 use serde::Deserialize;
 use crate::error::FurbrowserResult;
-use crate::models::config::Secrets;
+use crate::models::config::Config;
 use crate::models::vote::ImageVote;
 use crate::util::ui;
-use crate::USER_AGENT;
+use crate::VERSION;
 
 #[derive(Deserialize)]
 #[allow(dead_code)]
@@ -102,45 +102,51 @@ impl Post {
             .collect()
     }
 
-    pub fn inline_view(&self) -> FurbrowserResult<()> {
-        println!();
-
+    pub fn inline_view(&self, iterm2: bool) -> FurbrowserResult<()> {
         if self.file.ext == "webm" || self.file.ext == "swf" {
-            println!("[Video; please view externally]");
+            println!("[{esc}]8;;{}{esc}\\Video; please view externally or click here{esc}]8;;{esc}\\]",
+                self.file.url, esc = 27 as char);
             println!();
         } else {
-            ui::image(&self.file.url)?;
+            if iterm2 {
+                println!();
+                ui::image(&self.file.url)?;
+            } else {
+                println!("[{esc}]8;;{}{esc}\\Image; please view externally or click here{esc}]8;;{esc}\\]",
+                         self.file.url, esc = 27 as char);
+                println!();
+            }
         }
 
         Ok(())
     }
 
-    pub fn vote(&self, vote: &ImageVote, secrets: &Secrets) -> FurbrowserResult<()> {
-        ureq::post(&format!("https://e621.net/posts/{}/votes.json?no_unvote=true&score={}", self.id, match vote {
+    pub fn vote(&self, vote: &ImageVote, config: &Config) -> FurbrowserResult<()> {
+        ureq::post(&format!("https://{}/posts/{}/votes.json?no_unvote=true&score={}", config.domain, self.id, match vote {
             ImageVote::Up => 1,
             ImageVote::Down => -1
         }))
             .timeout(Duration::from_millis(5000))
-            .set("User-Agent", USER_AGENT)
+            .set("User-Agent", &config.user_agent.replace("VERSION", VERSION))
             .set("Authorization", &format!("Basic {}",
-                                           BASE64_STANDARD.encode(format!("{}:{}", secrets.user_name, secrets.api_key))))
+                BASE64_STANDARD.encode(format!("{}:{}", config.secrets.user_name, config.secrets.api_key))))
             .call()?;
 
         match vote {
             ImageVote::Up => {
-                ureq::post(&format!("https://e621.net/favorites.json?post_id={}", self.id))
+                ureq::post(&format!("https://{}/favorites.json?post_id={}", config.domain, self.id))
                     .timeout(Duration::from_millis(5000))
-                    .set("User-Agent", USER_AGENT)
+                    .set("User-Agent", &config.user_agent.replace("VERSION", VERSION))
                     .set("Authorization", &format!("Basic {}",
-                        BASE64_STANDARD.encode(format!("{}:{}", secrets.user_name, secrets.api_key))))
+                        BASE64_STANDARD.encode(format!("{}:{}", config.secrets.user_name, config.secrets.api_key))))
                     .call()?;
             }
             ImageVote::Down => {
-                ureq::delete(&format!("https://e621.net/favorites/{}.json", self.id))
+                ureq::delete(&format!("https://{}/favorites/{}.json", config.domain, self.id))
                     .timeout(Duration::from_millis(5000))
-                    .set("User-Agent", USER_AGENT)
+                    .set("User-Agent", &config.user_agent.replace("VERSION", VERSION))
                     .set("Authorization", &format!("Basic {}",
-                        BASE64_STANDARD.encode(format!("{}:{}", secrets.user_name, secrets.api_key))))
+                        BASE64_STANDARD.encode(format!("{}:{}", config.secrets.user_name, config.secrets.api_key))))
                     .call()?;
             }
         }

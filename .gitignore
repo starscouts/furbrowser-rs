@@ -3,4 +3,3 @@ blacklist_*
 history.db
 secrets.json
 config.toml
-config.default.toml

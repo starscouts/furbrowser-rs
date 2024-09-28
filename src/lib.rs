@@ -1,5 +1,6 @@
 use std::io::Write;
-use std::io;
+use std::{env, io};
+use crate::error::FurbrowserError;
 use crate::models::config::{get_blacklist, Config};
 pub use crate::models::error;
 use crate::models::error::FurbrowserResult;
@@ -10,21 +11,22 @@ mod models;
 mod util;
 mod core;
 
-const USER_AGENT: &str = "Mozilla/5.0 (+furbrowser-rs; by Starscouts on e621)";
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub fn interactive() -> FurbrowserResult<()> {
-    let connection = core::database::open_database("./history.db")?;
+pub fn interactive(profile: &str) -> FurbrowserResult<()> {
     let config = Config::build()?;
+    let profile = config.profiles.get(profile).ok_or(FurbrowserError::NoSuchProfile)?;
+    let connection = core::database::open_database(&config.database, config.backward_compatibility)?;
 
     let mut page = 1;
     loop {
-        let blacklist = get_blacklist("./blacklist_safe.txt")?;
+        let blacklist = get_blacklist(&profile.blacklist)?;
 
         ui::clear()?;
         println!("Downloading page {page}...");
         let mut data = core::e621::page(
-            "score:>=0 rating:safe status:active -fav:Starscouts -voted:anything zootopia -fan_character",
-            page, &config.secrets)?;
+            &profile.query,
+            page, &config)?;
         page += 1;
 
         data = core::e621::filter_page(data, &blacklist, &connection)?;
@@ -33,7 +35,7 @@ pub fn interactive() -> FurbrowserResult<()> {
             let likes = core::database::get_likes(&connection)?;
             let dislikes = core::database::get_dislikes(&connection)?;
 
-            let blacklist = get_blacklist("./blacklist_safe.txt")?;
+            let blacklist = get_blacklist(&profile.blacklist)?;
             let tags = image.tags();
             if tags.intersection(&blacklist).count() > 0 {
                 println!("Blacklist was updated and image {} is now ignored", image.id);
@@ -44,7 +46,10 @@ pub fn interactive() -> FurbrowserResult<()> {
             println!("{likes}/{dislikes}");
             println!("{}", image);
 
-            image.inline_view()?;
+            image.inline_view(match env::var("ITERM_PROFILE") {
+                Ok(_) => true,
+                _ => false
+            })?;
 
             let like = ImageVote::from(ui::yesno("Upvote or downvote?", "u", "d")?);
 
@@ -56,11 +61,13 @@ pub fn interactive() -> FurbrowserResult<()> {
                (image.id, String::from(&like), String::from(&like.reverse()))
             )?;
 
-            image.vote(&like, &config.secrets)?;
+            image.vote(&like, &config)?;
 
-            connection.execute("INSERT INTO published VALUES (?, TRUE, ?)",
-                (image.id, String::from(&like))
-            )?;
+            if config.backward_compatibility {
+                connection.execute("INSERT INTO published VALUES (?, TRUE, ?)",
+                    (image.id, String::from(&like))
+                )?;
+            }
 
             connection.cache_flush()?;
         }

@@ -1,5 +1,6 @@
-use std::collections::HashSet;
-use std::fs;
+use std::collections::{HashMap, HashSet};
+use std::{env, fs};
+use std::path::Path;
 use serde::Deserialize;
 use crate::models::error::FurbrowserResult;
 
@@ -11,19 +12,36 @@ pub struct Secrets {
     pub api_key: String
 }
 
+#[derive(Deserialize)]
 pub struct Config {
-    pub secrets: Secrets
+    pub backward_compatibility: bool,
+    pub user_agent: String,
+    pub posts_per_page: usize,
+    pub domain: String,
+    pub database: String,
+    pub secrets: Secrets,
+    pub profiles: Profiles
+}
+
+type Profiles = HashMap<String, Profile>;
+
+#[derive(Deserialize)]
+pub struct Profile {
+    pub blacklist: String,
+    pub query: String
 }
 
 impl Config {
     pub fn build() -> FurbrowserResult<Self> {
-        println!("Opening secrets...");
-        let secrets: Secrets = serde_json::from_str(&fs::read_to_string("./secrets.json")?)?;
-        println!("Hello, {}!", secrets.user_name);
+        println!("Loading configuration...");
+        let config: Self = if Path::new("./config.toml").exists() {
+            toml::from_str(&fs::read_to_string("./config.toml")?)?
+        } else {
+            toml::from_str(&fs::read_to_string(&format!("{}/.furbrowserrc", env::var("HOME")?))?)?
+        };
+        println!("Hello, {}!", config.secrets.user_name);
 
-        Ok(Self {
-            secrets
-        })
+        Ok(config)
     }
 }
 

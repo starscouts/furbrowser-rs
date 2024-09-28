@@ -1,0 +1,73 @@
+#
+# Welcome to Furbrowser! (Rust rewrite)
+#
+# Furbrowser is an image and video browser for e621 designed to work primarily
+# with iTerm2 but also compatible with other terminal applications through text
+# mode.
+#
+# This configuration file sets some options you need to get Furbrowser going and
+# behaving the way you want. This file is expected to be found either named
+# "config.toml" in the folder you are starting Furbrowser from, or in the
+# .furbrowserrc file in your home directory (does not work on Windows).
+#
+# If you need help, please use our support page.
+#
+
+# Whether to enable backward compatibility with the original (proprietary) Furbrowser or not.
+# Default: true
+backward_compatibility = true
+
+# The location to read the history database, which is used to store previously viewed images.
+# Default: "./history.db"
+database = "./history.db"
+
+# The user agent to use in HTTP requests to the e621 API. Note that as per the e621 terms of use,
+# this MUST contain AT LEAST your e621 username.
+# "VERSION" will automatically get replaced with the Furbrowser version you are using.
+# Default: "Mozilla/5.0 (Furbrowser; YourName on e621; +YourEmail) furbrowser-rs/VERSION"
+user_agent = "Mozilla/5.0 (Furbrowser; YourName on e621; +YourEmail) furbrowser-rs/VERSION"
+
+# The number of posts to fetch at one time (per page), the maximum value is 320. You may need to
+# adjust this if you get time out errors.
+# Default: 50
+posts_per_page = 50
+
+# The API root domain to use. You generally do not need to change this, but you might want to set
+# it to e926.net if you do not want to see NSFW content.
+# Default: e621.net
+domain = "e621.net"
+
+# This section contains your credentials.
+[secrets]
+
+# Your e621 username, which you use to log into the website.
+user_name = "MyCoolName"
+
+# Your e621 API key, which you can get in "Manage API Access" in your account settings.
+api_key = "ChangeMe"
+
+# This defines a single configuration profile. Each profile can change the blacklist and search query
+# used to fetch images. You can have as many profiles as you want, and each section must be named
+# "profile.<name>". To use a profile, run "furbrowser-rs -p <name>" (e.g. "furbrowser-rs -p safe")
+[profiles.safe]
+
+# The path of the blacklist to use for this profile. This should be a plain text file with tags using
+# underscores as spaces and with one tag per line. You can safely set this to /dev/null if you would
+# like to not block any tags.
+# Note that your blacklist is never sent to the e621 servers and does not update the "Blacklisted
+# Tags" section in your user settings.
+# Default: "./blacklist.txt"
+blacklist = "./blacklist.txt"
+
+# An e621 search query to use for this profile. See <https://e621.net/help/cheatsheet> for additional
+# information about how a search query needs to be formatted.
+# Default: "score:>=0 rating:safe status:active"
+query = "score:>=0 rating:safe status:active"
+
+# You can define more profiles below:
+
+#[profile.questionable]
+#blacklist = "./blacklist.txt"
+#query = "score:>=0 rating:questionable status:active"
+
+# ...
