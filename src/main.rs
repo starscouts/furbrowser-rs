@@ -7,7 +7,7 @@ mod args;
 fn main() {
     let args = Args::parse();
 
-    if let Err(e) = interactive(&args.profile) {
+    if let Err(e) = interactive(&args.profile, args.append) {
         eprintln!("error: {e}")
     }
 }

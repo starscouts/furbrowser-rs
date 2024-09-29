@@ -6,5 +6,9 @@ use clap::Parser;
 pub struct Args {
     /// The configuration profile to use
     #[arg(short, long)]
-    pub profile: String
+    pub profile: String,
+
+    /// Additional tags to add to the search query
+    #[arg(short, long)]
+    pub append: Option<String>
 }

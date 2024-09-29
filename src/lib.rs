@@ -13,7 +13,7 @@ mod core;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub fn interactive(profile: &str) -> FurbrowserResult<()> {
+pub fn interactive(profile: &str, append: Option<String>) -> FurbrowserResult<()> {
     let config = Config::build()?;
     let profile = config.profiles.get(profile).ok_or(FurbrowserError::NoSuchProfile)?;
     let connection = core::database::open_database(&config.database, config.backward_compatibility)?;
@@ -21,11 +21,16 @@ pub fn interactive(profile: &str) -> FurbrowserResult<()> {
     let mut page = 1;
     loop {
         let blacklist = get_blacklist(&profile.blacklist)?;
+        let query = if let Some(append) = &append {
+            &format!("{} {append}", &profile.query)
+        } else {
+            &profile.query
+        };
 
         ui::clear()?;
         println!("Downloading page {page}...");
         let mut data = core::e621::page(
-            &profile.query,
+            query,
             page, &config)?;
         page += 1;
 
