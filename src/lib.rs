@@ -36,7 +36,7 @@ pub fn interactive(profile: &str, append: Option<String>) -> FurbrowserResult<()
 
         data = core::e621::filter_page(data, &blacklist, &connection)?;
 
-        for image in data.posts {
+        for image in data.0 {
             let likes = core::database::get_likes(&connection)?;
             let dislikes = core::database::get_dislikes(&connection)?;
 

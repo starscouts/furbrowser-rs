@@ -12,7 +12,9 @@ use crate::util::sql;
 
 pub fn page(tags: &str, page: usize, config: &Config) -> FurbrowserResult<Posts> {
     let tags = encode(tags);
-    let response = ureq::get(&format!("https://{}/posts.json?limit={}&tags={tags}&page={page}", config.domain, config.posts_per_page))
+    let url = &format!("https://{}/posts.json?limit={}&tags={tags}&page={page}", config.domain, config.posts_per_page);
+    println!("{url}");
+    let response = ureq::get(url)
         .timeout(Duration::from_millis(5000))
         .set("User-Agent", &config.user_agent.replace("VERSION", VERSION))
         .set("Authorization", &format!("Basic {}",
@@ -24,7 +26,7 @@ pub fn page(tags: &str, page: usize, config: &Config) -> FurbrowserResult<Posts>
 }
 
 pub fn filter_page(mut posts: Posts, blacklist: &Blacklist, connection: &Connection) -> FurbrowserResult<Posts> {
-    posts.posts = posts.posts.into_iter()
+    posts.0 = posts.0.into_iter()
         .filter(|i| {
             let tags: HashSet<String> = i.tags.values()
                 .flatten()
