@@ -13,7 +13,6 @@ use crate::util::sql;
 pub fn page(tags: &str, page: usize, config: &Config) -> FurbrowserResult<Posts> {
     let tags = encode(tags);
     let url = &format!("https://{}/posts.json?limit={}&tags={tags}&page={page}", config.domain, config.posts_per_page);
-    println!("{url}");
     let response = ureq::get(url)
         .timeout(Duration::from_millis(5000))
         .set("User-Agent", &config.user_agent.replace("VERSION", VERSION))
