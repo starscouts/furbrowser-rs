@@ -11,7 +11,9 @@ use crate::util::ui;
 use crate::VERSION;
 
 #[derive(Deserialize)]
-pub struct Posts(pub Vec<Post>);
+pub struct Posts {
+    pub posts: Vec<Post>
+}
 
 #[derive(Deserialize, Debug)]
 pub struct PostFile {

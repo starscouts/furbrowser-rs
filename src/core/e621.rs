@@ -25,7 +25,7 @@ pub fn page(tags: &str, page: usize, config: &Config) -> FurbrowserResult<Posts>
 }
 
 pub fn filter_page(mut posts: Posts, blacklist: &Blacklist, connection: &Connection) -> FurbrowserResult<Posts> {
-    posts.0 = posts.0.into_iter()
+    posts.posts = posts.posts.into_iter()
         .filter(|i| {
             let tags: HashSet<String> = i.tags.values()
                 .flatten()

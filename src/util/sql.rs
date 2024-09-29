@@ -22,11 +22,11 @@ impl SyncSQLFetch for Connection {
 pub fn remove_existing(connection: &Connection, posts: Posts) -> FurbrowserResult<Posts> {
     let mut new_posts = vec![];
 
-    for post in posts.0 {
+    for post in posts.posts {
         if connection.fetch::<i64>(&format!("SELECT COUNT(*) FROM images WHERE id={}", post.id), 0)? == 0 {
             new_posts.push(post);
         }
     }
 
-    Ok(Posts(new_posts))
+    Ok(Posts { posts: new_posts })
 }
