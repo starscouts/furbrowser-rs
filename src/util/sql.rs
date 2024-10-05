@@ -11,13 +11,11 @@ pub trait SyncSQLFetch {
 
 impl SyncSQLFetch for Connection {
     fn fetch<T: FromSql>(&self, query: &str, column: usize) -> FurbrowserResult<T> {
-        let mut stmt = self.prepare(query)?;
-        let mut data_iter = stmt.query_map([], |row| {
-            // Clippy: "question mark operator is useless here"
+        let mut statement = self.prepare(query)?;
+        let mut data_iter = statement.query_map([], |row| {
             row.get::<_, T>(column)
         })?;
 
-        // The hell is ??
         Ok(data_iter.next().ok_or(FurbrowserError::SyncSQLFetch)??)
     }
 }
@@ -26,14 +24,10 @@ pub fn remove_existing(database: &Database, posts: Posts) -> FurbrowserResult<Po
     let mut new_posts = vec![];
 
     for post in posts.posts {
-        // let query =
-        // let count = connection.fetch
-        // if post == 0
-        if database.0.fetch::<i64>(
-            &format!("SELECT COUNT(*) FROM images WHERE id={}", post.id),
-            0,
-        )? == 0
-        {
+        let query = &format!("SELECT COUNT(*) FROM images WHERE id={}", post.id);
+        let count = database.0.fetch::<i64>(query, 0)?;
+
+        if count == 0 {
             new_posts.push(post);
         }
     }

@@ -1,5 +1,5 @@
-#[allow(deprecated)]
-use std::env::home_dir; // We don't support Windows
+#[allow(deprecated)] // We don't support Windows
+use std::env::home_dir;
 use std::io::Write;
 use std::process::{Command, ExitStatus, Stdio};
 use std::{env, io};
@@ -24,14 +24,12 @@ pub fn start_tui(profile: &str, extra_query: Option<String>) -> FurbrowserResult
         query.push_str(extra_query);
     }
 
-    let query = &query;
-
     loop {
         let blacklist = get_blacklist(&profile.blacklist_file)?;
 
         clear()?;
         println!("Downloading page {page}...");
-        let mut data = crate::core::e621::page(query, page, &config)?;
+        let mut data = crate::core::e621::page(&query, page, &config)?;
 
         page += 1;
         data = crate::core::e621::filter_page(data, &blacklist, &database)?;
@@ -97,8 +95,8 @@ pub fn clear() -> FurbrowserResult<()> {
     Ok(())
 }
 
-#[allow(deprecated)] // We don't support Windows
 pub fn image(url: &str) -> FurbrowserResult<ExitStatus> {
+    #[allow(deprecated)] // We don't support Windows
     let mut imgcat_path = home_dir().ok_or(FurbrowserError::NoValidHome)?;
     imgcat_path.push(".iterm2");
     imgcat_path.push("imgcat");
