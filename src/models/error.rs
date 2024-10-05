@@ -5,42 +5,43 @@ use std::io;
 #[derive(Debug)]
 pub enum FurbrowserError {
     SQL(rusqlite::Error),
-    LocalIO(io::Error),
+    IO(io::Error),
     TOML(toml::de::Error),
     HTTP(ureq::Error),
     Environment(VarError),
     SyncSQLFetch,
     Readline,
-    NoSuchProfile
+    NoSuchProfile,
+    NoValidHome,
 }
 
-impl From<rusqlite::Error> for FurbrowserError {
+impl From<rusqlite::Error> for Box<FurbrowserError> {
     fn from(value: rusqlite::Error) -> Self {
-        Self::SQL(value)
+        Self::new(FurbrowserError::SQL(value))
     }
 }
 
-impl From<io::Error> for FurbrowserError {
+impl From<io::Error> for Box<FurbrowserError> {
     fn from(value: io::Error) -> Self {
-        Self::LocalIO(value)
+        Self::new(FurbrowserError::IO(value))
     }
 }
 
-impl From<toml::de::Error> for FurbrowserError {
+impl From<toml::de::Error> for Box<FurbrowserError> {
     fn from(value: toml::de::Error) -> Self {
-        Self::TOML(value)
+        Self::new(FurbrowserError::TOML(value))
     }
 }
 
-impl From<ureq::Error> for FurbrowserError {
+impl From<ureq::Error> for Box<FurbrowserError> {
     fn from(value: ureq::Error) -> Self {
-        Self::HTTP(value)
+        Self::new(FurbrowserError::HTTP(value))
     }
 }
 
-impl From<VarError> for FurbrowserError {
+impl From<VarError> for Box<FurbrowserError> {
     fn from(value: VarError) -> Self {
-        Self::Environment(value)
+        Self::new(FurbrowserError::Environment(value))
     }
 }
 
@@ -49,14 +50,15 @@ impl Display for FurbrowserError {
         match self {
             FurbrowserError::SQL(e) => write!(f, "SQL Error: {e}"),
             FurbrowserError::Environment(e) => write!(f, "Environment Error: {e}"),
-            FurbrowserError::LocalIO(e) => write!(f, "Local I/O Error: {e}"),
+            FurbrowserError::IO(e) => write!(f, "Local I/O Error: {e}"),
             FurbrowserError::TOML(e) => write!(f, "TOML Error: {e}"),
             FurbrowserError::HTTP(e) => write!(f, "HTTP Error: {e}"),
             FurbrowserError::SyncSQLFetch => write!(f, "SQL Processing Error"),
             FurbrowserError::Readline => write!(f, "Read Line Error"),
-            FurbrowserError::NoSuchProfile => write!(f, "No Such Profile")
+            FurbrowserError::NoSuchProfile => write!(f, "No Such Profile"),
+            FurbrowserError::NoValidHome => write!(f, "No Home Directory"),
         }
     }
 }
 
-pub type FurbrowserResult<T> = Result<T, FurbrowserError>;
+pub type FurbrowserResult<T> = Result<T, Box<FurbrowserError>>;

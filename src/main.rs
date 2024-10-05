@@ -1,13 +1,14 @@
 use clap::Parser;
+use furbrowser_rs::start_tui;
+
 use crate::args::Args;
-use furbrowser_rs::interactive;
 
 mod args;
 
 fn main() {
     let args = Args::parse();
 
-    if let Err(e) = interactive(&args.profile, args.append) {
+    if let Err(e) = start_tui(&args.profile, args.append) {
         eprintln!("error: {e}")
     }
 }

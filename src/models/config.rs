@@ -1,15 +1,17 @@
 use std::collections::{HashMap, HashSet};
+use std::path::{Path, PathBuf};
 use std::{env, fs};
-use std::path::Path;
+
 use serde::Deserialize;
+
 use crate::models::error::FurbrowserResult;
 
 #[derive(Deserialize)]
 pub struct Secrets {
-    #[serde(alias = "id")]
-    pub user_name: String,
+    #[serde(alias = "id", alias = "user_name")]
+    pub username: String,
     #[serde(alias = "key")]
-    pub api_key: String
+    pub api_key: String,
 }
 
 #[derive(Deserialize)]
@@ -20,43 +22,56 @@ pub struct Config {
     pub domain: String,
     pub database: String,
     pub secrets: Secrets,
-    pub profiles: Profiles
+    pub profiles: HashMap<String, Profile>,
 }
-
-type Profiles = HashMap<String, Profile>;
 
 #[derive(Deserialize)]
 pub struct Profile {
-    pub blacklist: String,
-    pub query: String
+    #[serde(alias = "blacklist")]
+    pub blacklist_file: PathBuf,
+    pub query: String,
 }
 
 impl Config {
     pub fn build() -> FurbrowserResult<Self> {
         println!("Loading configuration...");
-        let config: Self = if Path::new("./config.toml").exists() {
-            toml::from_str(&fs::read_to_string("./config.toml")?)?
-        } else {
-            toml::from_str(&fs::read_to_string(&format!("{}/.furbrowserrc", env::var("HOME")?))?)?
-        };
-        println!("Hello, {}!", config.secrets.user_name);
+
+        let config = Self::get_config_path()?;
+        let config = fs::read_to_string(config)?;
+        let config: Self = toml::from_str(&config)?;
+
+        println!("Hello, {}!", config.secrets.username);
 
         Ok(config)
     }
+
+    pub fn get_config_path() -> FurbrowserResult<PathBuf> {
+        let local_path = Path::new("./config.toml");
+        let path = if local_path.exists() {
+            local_path.to_owned()
+        } else {
+            format!("{}/.furbrowserrc", env::var("HOME")?).into()
+        };
+
+        Ok(path)
+    }
 }
 
-pub type Blacklist = HashSet<String>;
+pub struct Blacklist(pub(crate) HashSet<String>);
 
-pub fn get_blacklist(file_path: &str) -> FurbrowserResult<Blacklist> {
+pub fn get_blacklist(file_path: &PathBuf) -> FurbrowserResult<Blacklist> {
     let blacklist = fs::read_to_string(file_path)?;
-    Ok(blacklist
-        .trim().split("\n")
-        .filter_map(|i| {
-            if i.trim() != "" && !i.trim().starts_with("#") {
-                Some(i.trim().to_owned())
-            } else {
-                None
-            }
-        })
-        .collect())
+    Ok(Blacklist(
+        blacklist
+            .trim()
+            .split("\n")
+            .filter_map(|i| {
+                if i.is_empty() && !i.trim().starts_with("#") {
+                    Some(i.trim().to_owned())
+                } else {
+                    None
+                }
+            })
+            .collect(),
+    ))
 }

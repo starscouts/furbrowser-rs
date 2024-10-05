@@ -1,2 +1,2 @@
 pub(crate) mod sql;
-pub(crate) mod ui;
+pub(crate) mod tui;

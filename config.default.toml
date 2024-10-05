@@ -41,7 +41,7 @@ domain = "e621.net"
 [secrets]
 
 # Your e621 username, which you use to log into the website.
-user_name = "MyCoolName"
+username = "MyCoolName"
 
 # Your e621 API key, which you can get in "Manage API Access" in your account settings.
 api_key = "ChangeMe"
@@ -57,7 +57,7 @@ api_key = "ChangeMe"
 # Note that your blacklist is never sent to the e621 servers and does not update the "Blacklisted
 # Tags" section in your user settings.
 # Default: "./blacklist.txt"
-blacklist = "./blacklist.txt"
+blacklist_file = "./blacklist.txt"
 
 # An e621 search query to use for this profile. See <https://e621.net/help/cheatsheet> for additional
 # information about how a search query needs to be formatted.

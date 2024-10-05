@@ -1,28 +1,41 @@
-use rusqlite::Connection;
 use crate::models::error::FurbrowserResult;
+use crate::models::vote::Score;
 use crate::util::sql::SyncSQLFetch;
+use rusqlite::Connection;
 
-pub fn open_database(file_path: &str, backward_compatibility: bool) -> FurbrowserResult<Connection> {
-    println!("Opening database...");
-    let connection = Connection::open(file_path)?;
+pub struct Database(pub(crate) Connection);
 
-    if !backward_compatibility {
-        connection.execute("DROP TABLE IF EXISTS tags", ())?;
+impl Database {
+    pub fn new(file_path: &str, backward_compatibility: bool) -> FurbrowserResult<Self> {
+        println!("Opening database...");
+        let connection = Connection::open(file_path)?;
+
+        if !backward_compatibility {
+            connection.execute("DROP TABLE IF EXISTS tags", ())?;
+        }
+
+        connection.execute("CREATE TABLE IF NOT EXISTS images (id INT NOT NULL, liked BOOL, disliked BOOL, PRIMARY KEY (id))", ())?;
+
+        if backward_compatibility {
+            connection.execute("CREATE TABLE IF NOT EXISTS published (id INT UNIQUE NOT NULL, processed BOOL NOT NULL, vote BOOL NOT NULL, PRIMARY KEY (id))", ())?;
+        }
+
+        Ok(Database(connection))
     }
 
-    connection.execute("CREATE TABLE IF NOT EXISTS images (id INT NOT NULL, liked BOOL, disliked BOOL, PRIMARY KEY (id))", ())?;
-
-    if backward_compatibility {
-        connection.execute("CREATE TABLE IF NOT EXISTS published (id INT UNIQUE NOT NULL, processed BOOL NOT NULL, vote BOOL NOT NULL, PRIMARY KEY (id))", ())?;
+    pub fn get_upvotes(&self) -> FurbrowserResult<i64> {
+        self.0.fetch("SELECT COUNT(*) FROM images WHERE liked=1", 0)
     }
 
-    Ok(connection)
-}
+    pub fn get_downvotes(&self) -> FurbrowserResult<i64> {
+        self.0
+            .fetch("SELECT COUNT(*) FROM images WHERE disliked=1", 0)
+    }
 
-pub fn get_likes(connection: &Connection) -> FurbrowserResult<i64> {
-    Ok(connection.fetch("SELECT COUNT(*) FROM images WHERE liked=1", 0)?)
-}
+    pub fn get_score(&self) -> FurbrowserResult<Score> {
+        let upvotes = self.get_upvotes()?;
+        let downvotes = self.get_downvotes()?;
 
-pub fn get_dislikes(connection: &Connection) -> FurbrowserResult<i64> {
-    Ok(connection.fetch("SELECT COUNT(*) FROM images WHERE disliked=1", 0)?)
+        Ok(Score { upvotes, downvotes })
+    }
 }
