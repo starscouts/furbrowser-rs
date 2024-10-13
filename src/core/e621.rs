@@ -3,6 +3,7 @@ use std::time::Duration;
 
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
+use colored::Colorize;
 use urlencoding::encode;
 
 use crate::core::database::Database;
@@ -33,7 +34,7 @@ pub fn page(tags: &str, page: usize, config: &Config) -> FurbrowserResult<Posts>
         )
         .call()?;
 
-    println!("Decoding data...");
+    println!("{}", "Decoding data...".bright_black());
     Ok(response.into_json()?)
 }
 

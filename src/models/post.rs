@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use std::fmt::{Display, Formatter};
-
+use colored::Colorize;
 use serde::Deserialize;
 
 use crate::core::database::Database;
@@ -47,7 +47,7 @@ impl Post {
                 tui::link(
                     &self.file.url,
                     "Video; please view externally or click here"
-                )
+                ).cyan()
             );
             println!();
         } else if iterm2 {
@@ -59,7 +59,7 @@ impl Post {
                 tui::link(
                     &self.file.url,
                     "Image; please view externally or click here"
-                )
+                ).cyan()
             );
             println!();
         }
@@ -115,7 +115,8 @@ impl Display for Post {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         writeln!(
             f,
-            "Image {}; {}; {}x{}",
+            "{}      #{}, {}, {}x{}",
+            "Image:".bold(),
             tui::link(
                 &format!("https://e621.net/posts/{}", self.id),
                 &self.id.to_string()
@@ -125,7 +126,7 @@ impl Display for Post {
             self.file.height
         )?;
         let tags = self.tags().into_iter().collect::<Vec<String>>().join(", ");
-        writeln!(f, "Tags: {}", tags)?;
+        writeln!(f, "{}       {}", "Tags:".bold(), tags)?;
         Ok(())
     }
 }

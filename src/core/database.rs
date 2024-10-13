@@ -1,3 +1,4 @@
+use colored::Colorize;
 use crate::models::error::FurbrowserResult;
 use crate::models::vote::Score;
 use crate::util::sql::SyncSQLFetch;
@@ -7,7 +8,7 @@ pub struct Database(pub(crate) Connection);
 
 impl Database {
     pub fn new(file_path: &str, backward_compatibility: bool) -> FurbrowserResult<Self> {
-        println!("Opening database...");
+        println!("{}", "Opening database...".bright_black());
         let connection = Connection::open(file_path)?;
 
         if !backward_compatibility {

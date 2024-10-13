@@ -3,7 +3,7 @@ use std::env::home_dir;
 use std::io::Write;
 use std::process::{Command, ExitStatus, Stdio};
 use std::{env, io};
-
+use colored::Colorize;
 use crate::core::database::Database;
 use crate::error::{FurbrowserError, FurbrowserResult};
 use crate::models::config::{get_blacklist, Config};
@@ -28,7 +28,7 @@ pub fn start_tui(profile: &str, extra_query: Option<String>) -> FurbrowserResult
         let blacklist = get_blacklist(&profile.blacklist_file)?;
 
         clear()?;
-        println!("Downloading page {page}...");
+        println!("{}", format!("Downloading page {page}...").bright_black());
         let mut data = crate::core::e621::page(&query, page, &config)?;
 
         page += 1;
@@ -41,20 +41,25 @@ pub fn start_tui(profile: &str, extra_query: Option<String>) -> FurbrowserResult
             let tags = post.tags();
 
             if tags.intersection(&blacklist.0).next().is_some() {
-                println!("Blacklist was updated and image {} is now ignored", post.id);
+                println!("{}", format!("Blacklist was updated and image {} is now ignored", post.id).bright_black());
                 continue;
             }
 
             clear()?;
-            println!("{}/{}", score.upvotes, score.downvotes);
+            println!("{}  {} up, {} down, {} total",
+                     "Breakdown:".bold(),
+                     score.upvotes,
+                     score.downvotes,
+                     score.upvotes + score.downvotes
+            );
             println!("{}", post);
 
             post.inline_view(env::var("ITERM_PROFILE").is_ok())?;
 
-            let vote = ImageVote::from(yes_no("Upvote or downvote?", "u", "d")?);
+            let vote = ImageVote::from(yes_no(&format!("{}", "Upvote or downvote?".yellow()), "u", "d")?);
 
             clear()?;
-            println!("Publishing vote...");
+            println!("{}", "Publishing vote...".bright_black());
 
             io::stdout().flush()?;
 
@@ -75,7 +80,7 @@ pub fn start_tui(profile: &str, extra_query: Option<String>) -> FurbrowserResult
 pub fn yes_no(prompt: &str, yes: &str, no: &str) -> FurbrowserResult<bool> {
     loop {
         print!("{}[2K\r", 27 as char);
-        print!("{prompt} ({yes}/{no})");
+        print!("{prompt} {}", format!("({yes}/{no})").bright_black());
         io::stdout().flush()?;
 
         let mut line = String::new();

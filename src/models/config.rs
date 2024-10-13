@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::{env, fs};
-
+use colored::Colorize;
 use serde::Deserialize;
 
 use crate::models::error::FurbrowserResult;
@@ -34,13 +34,13 @@ pub struct Profile {
 
 impl Config {
     pub fn build() -> FurbrowserResult<Self> {
-        println!("Loading configuration...");
+        println!("{}", "Loading configuration...".bright_black());
 
         let config = Self::get_config_path()?;
         let config = fs::read_to_string(config)?;
         let config: Self = toml::from_str(&config)?;
 
-        println!("Hello, {}!", config.secrets.username);
+        println!("{}", format!("Hello, {}!", config.secrets.username).bright_black());
 
         Ok(config)
     }
