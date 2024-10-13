@@ -57,6 +57,7 @@ impl Config {
     }
 }
 
+#[derive(Debug)]
 pub struct Blacklist(pub(crate) HashSet<String>);
 
 pub fn get_blacklist(file_path: &PathBuf) -> FurbrowserResult<Blacklist> {
@@ -66,7 +67,7 @@ pub fn get_blacklist(file_path: &PathBuf) -> FurbrowserResult<Blacklist> {
             .trim()
             .split("\n")
             .filter_map(|i| {
-                if i.is_empty() && !i.trim().starts_with("#") {
+                if !i.is_empty() && !i.trim().starts_with("#") {
                     Some(i.trim().to_owned())
                 } else {
                     None
