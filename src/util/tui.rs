@@ -21,6 +21,7 @@ pub fn start_tui(profile: &str, extra_query: Option<String>) -> FurbrowserResult
     let mut query = profile.query.clone();
 
     if let Some(extra_query) = &extra_query {
+        query.push(' ');
         query.push_str(extra_query);
     }
 
