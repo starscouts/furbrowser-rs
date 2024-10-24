@@ -30,7 +30,14 @@ pub fn start_tui(profile: &str, extra_query: Option<String>) -> FurbrowserResult
 
         clear()?;
         println!("{}", format!("Downloading page {page}...").bright_black());
-        let mut data = crate::core::e621::page(&query, page, &config)?;
+
+        let mut data = loop {
+            if let Ok(page) = crate::core::e621::page(&query, page, &config) {
+                break page;
+            } else {
+                print!("{}", "Failed to download page, retrying...".bright_black())
+            }
+        };
 
         page += 1;
         data = crate::core::e621::filter_page(data, &blacklist, &database)?;

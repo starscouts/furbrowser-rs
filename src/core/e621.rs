@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use std::thread;
 use std::time::Duration;
 
 use base64::prelude::BASE64_STANDARD;
@@ -14,6 +15,8 @@ use crate::util::sql;
 use crate::VERSION;
 
 pub fn page(tags: &str, page: usize, config: &Config) -> FurbrowserResult<Posts> {
+    thread::sleep(Duration::from_millis(500));
+    
     let tags = encode(tags);
     let url = &format!(
         "https://{}/posts.json?limit={}&tags={tags}&page={page}",
