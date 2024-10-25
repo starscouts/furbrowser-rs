@@ -2,7 +2,8 @@
 use std::env::home_dir;
 use std::io::Write;
 use std::process::{Command, ExitStatus, Stdio};
-use std::{env, io};
+use std::{env, io, thread};
+use std::time::Duration;
 use colored::Colorize;
 use crate::core::database::Database;
 use crate::error::{FurbrowserError, FurbrowserResult};
@@ -35,7 +36,8 @@ pub fn start_tui(profile: &str, extra_query: Option<String>) -> FurbrowserResult
             if let Ok(page) = crate::core::e621::page(&query, page, &config) {
                 break page;
             } else {
-                print!("{}", "Failed to download page, retrying...".bright_black())
+                print!("{}", "Failed to download page, retrying...".bright_black());
+                thread::sleep(Duration::from_secs(1));
             }
         };
 

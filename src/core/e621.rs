@@ -15,8 +15,8 @@ use crate::util::sql;
 use crate::VERSION;
 
 pub fn page(tags: &str, page: usize, config: &Config) -> FurbrowserResult<Posts> {
-    thread::sleep(Duration::from_millis(500));
-    
+    thread::sleep(Duration::from_millis(100));
+
     let tags = encode(tags);
     let url = &format!(
         "https://{}/posts.json?limit={}&tags={tags}&page={page}",
