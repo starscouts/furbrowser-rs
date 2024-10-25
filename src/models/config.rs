@@ -29,7 +29,8 @@ pub struct Config {
 pub struct Profile {
     #[serde(alias = "blacklist")]
     pub blacklist_file: PathBuf,
-    pub query: String,
+    pub query: Option<String>,
+    pub queries: Option<Vec<String>>
 }
 
 impl Config {

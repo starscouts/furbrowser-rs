@@ -14,31 +14,38 @@ use crate::models::post::Posts;
 use crate::util::sql;
 use crate::VERSION;
 
-pub fn page(tags: &str, page: usize, config: &Config) -> FurbrowserResult<Posts> {
-    thread::sleep(Duration::from_millis(100));
+pub fn page(queries: &[String], page: usize, config: &Config) -> FurbrowserResult<Posts> {
+    let mut posts = vec![];
 
-    let tags = encode(tags);
-    let url = &format!(
-        "https://{}/posts.json?limit={}&tags={tags}&page={page}",
-        config.domain, config.posts_per_page
-    );
-    let response = ureq::get(url)
-        .timeout(Duration::from_millis(5000))
-        .set("User-Agent", &config.user_agent.replace("VERSION", VERSION))
-        .set(
-            "Authorization",
-            &format!(
-                "Basic {}",
-                BASE64_STANDARD.encode(format!(
-                    "{}:{}",
-                    config.secrets.username, config.secrets.api_key
-                ))
-            ),
-        )
-        .call()?;
+    for (index, tags) in queries.iter().enumerate() {
+        println!("{}", format!("Fetching data... {}/{}", index + 1, queries.len()).bright_black());
+        thread::sleep(Duration::from_millis(100));
 
-    println!("{}", "Decoding data...".bright_black());
-    Ok(response.into_json()?)
+        let tags = encode(tags);
+        let url = &format!(
+            "https://{}/posts.json?limit={}&tags={tags}&page={page}",
+            config.domain, config.posts_per_page
+        );
+        let response = ureq::get(url)
+            .timeout(Duration::from_millis(5000))
+            .set("User-Agent", &config.user_agent.replace("VERSION", VERSION))
+            .set(
+                "Authorization",
+                &format!(
+                    "Basic {}",
+                    BASE64_STANDARD.encode(format!(
+                        "{}:{}",
+                        config.secrets.username, config.secrets.api_key
+                    ))
+                ),
+            )
+            .call()?;
+
+        println!("{}", format!("Decoding data... {}/{}", index + 1, queries.len()).bright_black());
+        posts.append(&mut response.into_json::<Posts>()?.posts)
+    }
+
+    Ok(Posts { posts })
 }
 
 pub fn filter_page(

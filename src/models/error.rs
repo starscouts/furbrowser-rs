@@ -13,6 +13,7 @@ pub enum FurbrowserError {
     Readline,
     NoSuchProfile,
     NoValidHome,
+    MissingQuery,
 }
 
 impl From<rusqlite::Error> for Box<FurbrowserError> {
@@ -48,15 +49,16 @@ impl From<VarError> for Box<FurbrowserError> {
 impl Display for FurbrowserError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            FurbrowserError::SQL(e) => write!(f, "SQL Error: {e}"),
-            FurbrowserError::Environment(e) => write!(f, "Environment Error: {e}"),
-            FurbrowserError::IO(e) => write!(f, "Local I/O Error: {e}"),
-            FurbrowserError::TOML(e) => write!(f, "TOML Error: {e}"),
-            FurbrowserError::HTTP(e) => write!(f, "HTTP Error: {e}"),
-            FurbrowserError::SyncSQLFetch => write!(f, "SQL Processing Error"),
-            FurbrowserError::Readline => write!(f, "Read Line Error"),
-            FurbrowserError::NoSuchProfile => write!(f, "No Such Profile"),
-            FurbrowserError::NoValidHome => write!(f, "No Home Directory"),
+            FurbrowserError::SQL(e) => write!(f, "Error running SQL query: {e}"),
+            FurbrowserError::Environment(e) => write!(f, "Error with environment variable: {e}"),
+            FurbrowserError::IO(e) => write!(f, "Error with I/O: {e}"),
+            FurbrowserError::TOML(e) => write!(f, "Error decoding TOML data: {e}"),
+            FurbrowserError::HTTP(e) => write!(f, "Error running HTTP request: {e}"),
+            FurbrowserError::SyncSQLFetch => write!(f, "Error processing SQL data"),
+            FurbrowserError::Readline => write!(f, "Error reading line"),
+            FurbrowserError::NoSuchProfile => write!(f, "No such profile defined in the configuration file"),
+            FurbrowserError::NoValidHome => write!(f, "Could not find the current user's home directory"),
+            FurbrowserError::MissingQuery => write!(f, "Either 'query' or 'queries' needs to be defined in the profile")
         }
     }
 }

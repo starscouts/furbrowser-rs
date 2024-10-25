@@ -19,11 +19,20 @@ pub fn start_tui(profile: &str, extra_query: Option<String>) -> FurbrowserResult
     let database = Database::new(&config.database, config.backward_compatibility)?;
 
     let mut page = 1;
-    let mut query = profile.query.clone();
+    
+    let mut query = if let Some(query) = profile.query.clone() {
+        vec![query]
+    } else if let Some(queries) = profile.queries.clone() {
+        queries
+    } else {
+        return Err(Box::new(FurbrowserError::MissingQuery));
+    };
 
     if let Some(extra_query) = &extra_query {
-        query.push(' ');
-        query.push_str(extra_query);
+        for part in &mut query {
+            part.push(' ');
+            part.push_str(extra_query);
+        }
     }
 
     loop {
