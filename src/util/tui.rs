@@ -84,8 +84,6 @@ pub fn start_tui(profile: &str, extra_query: Option<String>) -> FurbrowserResult
 
             io::stdout().flush()?;
 
-            post.vote(&vote, &config, &database)?;
-
             let mut attempt = 1;
             loop {
                 if attempt > 5 {
