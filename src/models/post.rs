@@ -10,7 +10,7 @@ use crate::models::request;
 use crate::models::vote::ImageVote;
 use crate::util::tui;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct Posts {
     pub posts: Vec<Post>,
 }

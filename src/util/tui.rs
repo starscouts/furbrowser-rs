@@ -42,10 +42,12 @@ pub fn start_tui(profile: &str, extra_query: Option<String>) -> FurbrowserResult
         println!("{}", format!("Downloading page {page}...").bright_black());
 
         let mut data = loop {
-            if let Ok(page) = crate::core::e621::page(&query, page, &config) {
+            let result = crate::core::e621::page(&query, page, &config);
+            if let Ok(page) = result {
                 break page;
             } else {
-                print!("{}", "Failed to download page, retrying...".bright_black());
+                println!("{}", "Failed to download page, retrying...".bright_black());
+                println!("{}", format!("Failed to download page ({}), retrying...", *result.unwrap_err()).bright_black());
                 thread::sleep(Duration::from_secs(1));
             }
         };
@@ -83,6 +85,21 @@ pub fn start_tui(profile: &str, extra_query: Option<String>) -> FurbrowserResult
             io::stdout().flush()?;
 
             post.vote(&vote, &config, &database)?;
+
+            let mut attempt = 1;
+            loop {
+                if attempt > 5 {
+                    break;
+                }
+                let result = post.vote(&vote, &config, &database);
+                if result.is_ok() {
+                    break;
+                } else {
+                    println!("{}", format!("Failed to publish vote ({}), retrying... (attempt {}/5)", *result.unwrap_err(), attempt).bright_black());
+                    thread::sleep(Duration::from_secs(1));
+                }
+                attempt += 1;
+            }
 
             if config.backward_compatibility {
                 database.0.execute(
